@@ -1,42 +1,52 @@
 // --- libraries importing
-require("dotenv").config();
-const express = require("express");
 const bodyParser = require("body-parser");
-const morgan= require("morgan");
-const session= require("client-sessions");
-const path = require("path");
-const logger = require("morgan");
-const DBUtils = require("./utils/DBUtils");
+var cookieParser = require('cookie-parser');
 
-//var router = express.Router();
+//#region express configures
+require("dotenv").config();
+var express = require("express");
+var path = require("path");
+var logger = require("morgan");
+const session = require("client-sessions");
+const DBUtils = require("./utils/DBUtils");
+const cors =  require("cors");
+
+
+// --- app settings and configurations
+const app = express();
+app.use(logger("dev")); //logger
+app.use(express.json()); // parse application/json
+//enable all cors
+app.use(cors());
+
+app.use(cookieParser());
+// setting cookies configurations
+app.use(
+  session({
+    cookieName: "session", // the cookie key name
+    secret: process.env.COOKIE_SECRET, // the encryption key
+    duration: 60 *60* 60 * 1000, // expired after 60 minutes
+    activeDuration: 0 // if expiresIn < activeDuration,
+    //the session will be extended by activeDuration milliseconds
+  })
+);
+app.use(bodyParser.urlencoded({ extended: false }));// parse application/x-www-form-urlencoded
+app.use(express.static(path.join(__dirname, "public"))); //To serve static files such as images, CSS files, and JavaScript files
+
+var port = process.env.PORT || "3000";// print requests logs
+//app.use(morgan(":method :url :status :response-time ms"));
+//app.use(bodyParser.json());// parse application/json
+
+//#endregion
 
 // --- routes importing
 const auth = require("./routes/auth.js");
 const users = require("./routes/users.js");
 const recipes = require("./routes/recipes.js");
+const profiles = require("./routes/profiles.js");
 
-// --- app settings and configurations
-const app = express();
-const port = 3000;
 
-// parse application/json
-app.use(bodyParser.json());
-
-// parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: false }));
-
-// print requests logs
-app.use(morgan(":method :url :status :response-time ms"));
-
-// setting cookies configurations
-app.use(
-  session({
-    cookieName: "session",
-    secret: "WeLoveToEat",
-    duration: "*60*60*1000",
-    activeDuration: 0,
-  })
-);
+//#endregion
 
 // senity check - verify that your server is still alive
 app.get("/alive", (req, res)=> {
@@ -47,6 +57,7 @@ app.get("/alive", (req, res)=> {
 app.use("/users", users);
 app.use("/recipes", recipes);
 app.use(auth);
+app.use("/profiles", profiles);
 
 // deafult router
 app.use((req, res)=>{
