@@ -18,6 +18,7 @@ app.use(logger("dev")); //logger
 app.use(express.json()); // parse application/json
 //enable all cors
 app.use(cors());
+app.options("*", cors());
 
 app.use(cookieParser());
 // setting cookies configurations
