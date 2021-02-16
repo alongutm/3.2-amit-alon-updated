@@ -17,8 +17,13 @@ const app = express();
 app.use(logger("dev")); //logger
 app.use(express.json()); // parse application/json
 //enable all cors
-app.use(cors());
-app.options("*", cors());
+const corsConfig = {
+  origin: true,
+  credentials: true
+};
+
+app.use(cors(corsConfig));
+app.options("*", cors(corsConfig));
 
 app.use(cookieParser());
 // setting cookies configurations
